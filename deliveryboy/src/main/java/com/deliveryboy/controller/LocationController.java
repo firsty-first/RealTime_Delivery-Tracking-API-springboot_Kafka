@@ -21,16 +21,29 @@ public class LocationController {
     @PostMapping("/update")
     public ResponseEntity<?> updateLocation(@RequestParam("latitude") double latitude,
                                             @RequestParam("longitude") double longitude) {
-        if(latitude>0 && longitude>0) {
-            String location = "(" + latitude + "," + longitude + ")";
-
-            // Send location data to Kafka topic
-            this.kafkaService.updateLocation(location);
-
-            return new ResponseEntity<>(Map.of("message", "Location updated"), HttpStatus.OK);
+        // Validate input parameters
+        if (!isValidLatitude(latitude) || !isValidLongitude(longitude)) {
+            return new ResponseEntity<>(Map.of("error", "Invalid location data"), HttpStatus.BAD_REQUEST);
         }
-        else
-            return new ResponseEntity<>(Map.of("message", "Could fetch correct gps from end device"), HttpStatus.NOT_FOUND);
+
+        // Construct location string
+        String location = "(" + latitude + "," + longitude + ")";
+
+        // Send location data to Kafka topic
+        this.kafkaService.updateLocation(location);
+
+        return new ResponseEntity<>(Map.of("message", "Location updated"), HttpStatus.OK);
     }
+
+    private boolean isValidLatitude(double latitude) {
+        // Validate latitude range (e.g., between -90 and 90 degrees)
+        return latitude >= -90 && latitude <= 90;
+    }
+
+    private boolean isValidLongitude(double longitude) {
+        // Validate longitude range (e.g., between -180 and 180 degrees)
+        return longitude >= -180 && longitude <= 180;
+    }
+
 
 }
